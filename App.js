@@ -15,16 +15,22 @@ export default function App() {
   return (
     <PaperProvider theme={theme}>
       <NavigationContainer>
-        <StatusBar style="auto" />
+        <StatusBar style="light" backgroundColor="#1a1a2e" />
         <Stack.Navigator
           initialRouteName="Home"
           screenOptions={{
             headerStyle: {
-              backgroundColor: '#1976d2',
+              backgroundColor: '#1a1a2e',
+              elevation: 0,
+              shadowOpacity: 0,
             },
             headerTintColor: '#fff',
             headerTitleStyle: {
               fontWeight: 'bold',
+              fontSize: 18,
+            },
+            cardStyle: {
+              backgroundColor: '#f8f9fa',
             },
           }}
         >

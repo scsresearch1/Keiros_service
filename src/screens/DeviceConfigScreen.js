@@ -6,6 +6,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import {
   Card,
@@ -18,12 +19,15 @@ import {
   List,
   Switch,
   Divider,
+  IconButton,
 } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 import BluetoothService from '../services/BluetoothService';
 import { theme, styles } from '../styles/theme';
+
+const { width } = Dimensions.get('window');
 
 const DeviceConfigScreen = () => {
   const navigation = useNavigation();
@@ -112,7 +116,6 @@ const DeviceConfigScreen = () => {
       (successMessage) => {
         setIsConfiguring(false);
         setConnectionStatus('WiFi Configured');
-        setLastConfigTime(new Date().toLocaleTimeString());
         Alert.alert(
           'Configuration Success',
           `WiFi settings sent to ${device.name}\n\nSSID: ${ssid}\nTime: ${new Date().toLocaleTimeString()}`,
@@ -133,21 +136,6 @@ const DeviceConfigScreen = () => {
         Alert.alert('Configuration Error', error);
       }
     );
-  };
-
-  const getConnectionStatusColor = () => {
-    switch (connectionStatus) {
-      case 'Connected':
-        return '#4caf50';
-      case 'Connecting...':
-      case 'Configuring WiFi...':
-        return '#ff9800';
-      case 'Connection Failed':
-      case 'Configuration Failed':
-        return '#f44336';
-      default:
-        return '#666';
-    }
   };
 
   const sendCommand = async (command) => {
@@ -172,6 +160,21 @@ const DeviceConfigScreen = () => {
     sendCommand('FLASH_READ');
   };
 
+  const getConnectionStatusColor = () => {
+    switch (connectionStatus) {
+      case 'Connected':
+        return '#27ae60';
+      case 'Connecting...':
+      case 'Configuring WiFi...':
+        return '#f39c12';
+      case 'Connection Failed':
+      case 'Configuration Failed':
+        return '#e74c3c';
+      default:
+        return '#7f8c8d';
+    }
+  };
+
   const formatDeviceId = (id) => {
     return `${id.substring(0, 8)}...${id.substring(id.length - 8)}`;
   };
@@ -181,198 +184,214 @@ const DeviceConfigScreen = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
         {/* Device Information */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Title style={styles.subtitle}>Device Information</Title>
-            <List.Item
-              title={device.name}
-              description={`ID: ${formatDeviceId(device.id)}`}
-              left={(props) => (
-                <MaterialIcons 
-                  {...props} 
-                  name="router" 
-                  size={32} 
-                  color={theme.colors.primary} 
-                />
-              )}
+        <Surface style={styles.modernCard}>
+          <View style={localStyles.deviceHeader}>
+            <MaterialCommunityIcons 
+              name="chip" 
+              size={40} 
+              color={theme.colors.primary} 
             />
-            <List.Item
-              title="Device Address"
-              description={device.address}
-              left={(props) => (
-                <MaterialIcons 
-                  {...props} 
-                  name="bluetooth" 
-                  size={24} 
-                  color={theme.colors.primary} 
-                />
-              )}
-            />
-            <List.Item
-              title="Connection Status"
-              description={connectionStatus}
-              left={(props) => (
-                <MaterialIcons 
-                  {...props} 
-                  name="bluetooth-connected" 
-                  size={24} 
-                  color={getConnectionStatusColor()} 
-                />
-              )}
-            />
-          </Card.Content>
-        </Card>
+            <View style={localStyles.deviceInfo}>
+              <Title style={styles.subtitle}>{device.name}</Title>
+              <Text style={styles.deviceId}>ID: {formatDeviceId(device.id)}</Text>
+              <Text style={styles.deviceId}>MAC: {device.address}</Text>
+            </View>
+            <View style={[
+              styles.statusIndicator,
+              { backgroundColor: getConnectionStatusColor() }
+            ]} />
+          </View>
+          <Text style={[
+            localStyles.statusText,
+            { color: getConnectionStatusColor() }
+          ]}>
+            Status: {connectionStatus}
+          </Text>
+        </Surface>
 
         {/* Connection Control */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Title style={styles.subtitle}>Device Connection</Title>
-            
-            {isConnecting ? (
-              <View style={localStyles.loadingContainer}>
-                <ActivityIndicator size="large" color={theme.colors.primary} />
-                <Text style={styles.statusText}>Connecting to device...</Text>
-              </View>
-            ) : (
-              <Button
-                mode={isConnected ? "outlined" : "contained"}
-                onPress={isConnected ? disconnectFromDevice : connectToDevice}
-                style={styles.button}
-                icon={isConnected ? "bluetooth-disabled" : "bluetooth"}
-              >
-                {isConnected ? 'Disconnect' : 'Connect to Device'}
-              </Button>
-            )}
-          </Card.Content>
-        </Card>
+        <Surface style={styles.modernCard}>
+          <Title style={styles.subtitle}>Device Connection</Title>
+          
+          {isConnecting ? (
+            <View style={localStyles.loadingContainer}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <Text style={styles.statusText}>Connecting to device...</Text>
+            </View>
+          ) : (
+            <Button
+              mode={isConnected ? "outlined" : "contained"}
+              onPress={isConnected ? disconnectFromDevice : connectToDevice}
+              style={styles.gradientButton}
+              icon={isConnected ? "bluetooth-off" : "bluetooth"}
+              contentStyle={localStyles.buttonContent}
+            >
+              {isConnected ? 'Disconnect' : 'Connect to Device'}
+            </Button>
+          )}
+        </Surface>
 
         {/* WiFi Configuration */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Title style={styles.subtitle}>WiFi Configuration</Title>
-            
-            <TextInput
-              label="WiFi SSID (Network Name)"
-              value={ssid}
-              onChangeText={setSsid}
-              style={styles.inputContainer}
-              mode="outlined"
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholder="Enter WiFi network name"
-            />
+        <Surface style={styles.modernCard}>
+          <Title style={styles.subtitle}>WiFi Configuration</Title>
+          
+          <TextInput
+            label="WiFi SSID (Network Name)"
+            value={ssid}
+            onChangeText={setSsid}
+            style={styles.inputContainer}
+            mode="outlined"
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholder="Enter WiFi network name"
+            left={<TextInput.Icon icon="wifi" />}
+          />
 
-            <TextInput
-              label="WiFi Password"
-              value={password}
-              onChangeText={setPassword}
-              style={styles.inputContainer}
-              mode="outlined"
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholder="Enter WiFi password"
-              right={
-                <TextInput.Icon
-                  icon={showPassword ? "eye-off" : "eye"}
-                  onPress={() => setShowPassword(!showPassword)}
-                />
-              }
-            />
+          <TextInput
+            label="WiFi Password"
+            value={password}
+            onChangeText={setPassword}
+            style={styles.inputContainer}
+            mode="outlined"
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholder="Enter WiFi password"
+            left={<TextInput.Icon icon="lock" />}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? "eye-off" : "eye"}
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            }
+          />
 
-            {isConfiguring ? (
-              <View style={localStyles.loadingContainer}>
-                <ActivityIndicator size="large" color={theme.colors.primary} />
-                <Text style={styles.statusText}>Sending WiFi configuration...</Text>
-              </View>
-            ) : (
-              <Button
-                mode="contained"
-                onPress={configureWiFi}
-                disabled={!isConnected || !ssid.trim() || !password.trim()}
-                style={styles.button}
-                icon="wifi"
-              >
-                Configure WiFi
-              </Button>
-            )}
-
-            {lastConfigTime && (
-              <Text style={styles.successText}>
-                Last configuration: {lastConfigTime}
-              </Text>
-            )}
-          </Card.Content>
-        </Card>
+          {isConfiguring ? (
+            <View style={localStyles.loadingContainer}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <Text style={styles.statusText}>Sending WiFi configuration...</Text>
+            </View>
+          ) : (
+            <Button
+              mode="contained"
+              onPress={configureWiFi}
+              disabled={!isConnected || !ssid.trim() || !password.trim()}
+              style={styles.gradientButton}
+              icon="wifi"
+              contentStyle={localStyles.buttonContent}
+            >
+              Configure WiFi
+            </Button>
+          )}
+        </Surface>
 
         {/* Device Commands */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Title style={styles.subtitle}>Device Commands</Title>
-            
+        <Surface style={styles.modernCard}>
+          <Title style={styles.subtitle}>Device Commands</Title>
+          
+          <View style={localStyles.commandButtons}>
             <Button
               mode="outlined"
               onPress={getDeviceStatus}
               disabled={!isConnected}
-              style={styles.button}
-              icon="info"
+              style={[styles.button, { flex: 1, marginRight: 8 }]}
+              icon="information-outline"
+              contentStyle={localStyles.buttonContent}
             >
-              Get Device Status
+              Status
             </Button>
 
             <Button
               mode="outlined"
               onPress={readFlashData}
               disabled={!isConnected}
-              style={styles.button}
-              icon="storage"
+              style={[styles.button, { flex: 1, marginLeft: 8 }]}
+              icon="database"
+              contentStyle={localStyles.buttonContent}
             >
-              Read Flash Data
+              Flash Data
             </Button>
+          </View>
 
-            {lastCommandResponse && (
-              <Card style={styles.card}>
-                <Card.Content>
-                  <Title style={styles.subtitle}>Last Response</Title>
-                  <Text style={styles.text}>{lastCommandResponse}</Text>
-                </Card.Content>
-              </Card>
-            )}
-          </Card.Content>
-        </Card>
+          {lastCommandResponse && (
+            <Surface style={localStyles.responseCard}>
+              <Text style={styles.subtitle}>Last Response</Text>
+              <Text style={styles.text}>{lastCommandResponse}</Text>
+            </Surface>
+          )}
+        </Surface>
 
         {/* Configuration Guidelines */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Title style={styles.subtitle}>Configuration Guidelines</Title>
-            <Text style={styles.text}>
-              • Device uses Classic Bluetooth Serial communication
-            </Text>
-            <Text style={styles.text}>
-              • SSID should match your WiFi network name exactly
-            </Text>
-            <Text style={styles.text}>
-              • Password must be at least 8 characters long
-            </Text>
-            <Text style={styles.text}>
-              • Use STATUS command to check device information
-            </Text>
-            <Text style={styles.text}>
-              • Use FLASH_READ command to read stored GPS data
-            </Text>
-          </Card.Content>
-        </Card>
+        <Surface style={styles.modernCard}>
+          <Title style={styles.subtitle}>Configuration Guidelines</Title>
+          <View style={localStyles.guidelines}>
+            <View style={localStyles.guidelineItem}>
+              <MaterialCommunityIcons name="bluetooth" size={20} color="#3498db" />
+              <Text style={styles.text}>Device uses Classic Bluetooth Serial communication</Text>
+            </View>
+            <View style={localStyles.guidelineItem}>
+              <MaterialCommunityIcons name="wifi" size={20} color="#27ae60" />
+              <Text style={styles.text}>SSID should match your WiFi network name exactly</Text>
+            </View>
+            <View style={localStyles.guidelineItem}>
+              <MaterialCommunityIcons name="lock" size={20} color="#e67e22" />
+              <Text style={styles.text}>Password must be at least 8 characters long</Text>
+            </View>
+            <View style={localStyles.guidelineItem}>
+              <MaterialCommunityIcons name="information" size={20} color="#9b59b6" />
+              <Text style={styles.text}>Use STATUS command to check device information</Text>
+            </View>
+            <View style={localStyles.guidelineItem}>
+              <MaterialCommunityIcons name="database" size={20} color="#e74c3c" />
+              <Text style={styles.text}>Use FLASH_READ command to read stored GPS data</Text>
+            </View>
+          </View>
+        </Surface>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
 const localStyles = StyleSheet.create({
+  deviceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  deviceInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
   loadingContainer: {
     alignItems: 'center',
     paddingVertical: 16,
+  },
+  commandButtons: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  buttonContent: {
+    paddingVertical: 8,
+  },
+  responseCard: {
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  guidelines: {
+    marginTop: 8,
+  },
+  guidelineItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
   },
 });
 

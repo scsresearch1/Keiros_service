@@ -59,12 +59,12 @@ class BluetoothService {
       this.isScanning = true;
       this.scannedDevices.clear();
 
-      // Start discovering devices
-      const devices = await BluetoothClassic.getBondedDevices();
+      // Get bonded devices first
+      const bondedDevices = await BluetoothClassic.getBondedDevices();
       
-      // Filter for ESP32 devices
-      devices.forEach(device => {
-        if (this.isESP32Device(device.name)) {
+      // Filter for Keiros devices
+      bondedDevices.forEach(device => {
+        if (this.isKeirosDevice(device.name)) {
           const deviceInfo = {
             id: device.id,
             name: device.name,
@@ -93,15 +93,15 @@ class BluetoothService {
     this.isScanning = false;
   }
 
-  isESP32Device(deviceName) {
-    const esp32Keywords = [
+  isKeirosDevice(deviceName) {
+    const keirosKeywords = [
+      'Keiros',
+      'keiros',
+      'KEIROS',
       'ESP32',
       'esp32',
       'ESP-32',
       'ESP32-',
-      'Keiros',
-      'keiros',
-      'ESP32_GPS_BT',  // Your device name
       'GPS_BT',
       'IoT',
       'iot',
@@ -109,7 +109,7 @@ class BluetoothService {
       'device'
     ];
     
-    return esp32Keywords.some(keyword => 
+    return keirosKeywords.some(keyword => 
       deviceName.toLowerCase().includes(keyword.toLowerCase())
     );
   }
@@ -162,7 +162,7 @@ class BluetoothService {
       // Read response if available
       const response = await BluetoothClassic.readFromDevice(this.connectedDevice.address);
       
-      onSuccess(`WiFi configuration sent successfully. Response: ${response}`);
+      onSuccess(`WiFi configuration sent successfully!\nSSID: ${ssid}\nResponse: ${response}`);
     } catch (error) {
       onError(`Failed to send WiFi config: ${error.message}`);
     }

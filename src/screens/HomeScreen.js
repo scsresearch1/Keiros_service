@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  Alert,
   ScrollView,
+  Alert,
+  Dimensions,
 } from 'react-native';
 import {
   Card,
@@ -13,12 +14,16 @@ import {
   ActivityIndicator,
   Text,
   Surface,
+  Chip,
+  IconButton,
 } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 import BluetoothService from '../services/BluetoothService';
 import { theme, styles } from '../styles/theme';
+
+const { width } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -46,7 +51,7 @@ const HomeScreen = () => {
     if (!bluetoothEnabled) {
       Alert.alert(
         'Bluetooth Required',
-        'Please enable Bluetooth to scan for ESP32 devices.',
+        'Please enable Bluetooth to scan for Keiros devices.',
         [{ text: 'OK' }]
       );
       return;
@@ -78,108 +83,171 @@ const HomeScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Surface style={styles.card}>
-        <Card style={styles.card}>
-          <Card.Content>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Header Card */}
+      <Surface style={styles.modernCard}>
+        <View style={localStyles.headerContainer}>
+          <View style={localStyles.headerContent}>
             <Title style={styles.title}>Keiros Service</Title>
-            <Paragraph style={styles.text}>
-              Professional ESP32 Device Management System
+            <Paragraph style={styles.subtitle}>
+              Professional Keiros Device Management System
             </Paragraph>
-          </Card.Content>
-        </Card>
+          </View>
+          <IconButton
+            icon="cog"
+            size={24}
+            iconColor={theme.colors.primary}
+            onPress={() => {}}
+          />
+        </View>
       </Surface>
 
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.statusContainer}>
-            <MaterialIcons 
-              name="bluetooth" 
-              size={24} 
-              color={bluetoothEnabled ? '#4caf50' : '#f44336'} 
-            />
-            <Text style={styles.statusText}>
+      {/* Status Card */}
+      <Surface style={styles.modernCard}>
+        <View style={localStyles.statusContainer}>
+          <View style={localStyles.statusItem}>
+            <View style={[
+              styles.statusIndicator,
+              bluetoothEnabled ? styles.connected : styles.disconnected
+            ]} />
+            <Text style={styles.text}>
               Bluetooth: {bluetoothEnabled ? 'Enabled' : 'Disabled'}
             </Text>
           </View>
-        </Card.Content>
-      </Card>
+          <Chip 
+            mode="outlined" 
+            textStyle={{ fontSize: 12 }}
+            style={localStyles.statusChip}
+          >
+            {deviceCount} Devices Found
+          </Chip>
+        </View>
+      </Surface>
 
-      <Card style={styles.card}>
-        <Card.Content>
-          <Title style={styles.subtitle}>Device Discovery</Title>
-          <Paragraph style={styles.text}>
-            Scan for nearby ESP32 devices and configure their WiFi settings.
-          </Paragraph>
-          
-          {isScanning ? (
-            <View style={styles.scanningContainer}>
-              <ActivityIndicator size="large" color={theme.colors.primary} />
-              <Text style={styles.statusText}>
-                Scanning for ESP32 devices...
-              </Text>
-              <Text style={styles.statusText}>
-                Found {deviceCount} device(s)
-              </Text>
-            </View>
-          ) : (
-            <Button
-              mode="contained"
-              onPress={startDeviceScan}
-              disabled={!bluetoothEnabled}
-              style={styles.button}
-              icon="bluetooth-search"
-            >
-              Start Device Scan
-            </Button>
-          )}
-        </Card.Content>
-      </Card>
+      {/* Device Discovery Card */}
+      <Surface style={styles.modernCard}>
+        <Title style={styles.subtitle}>Device Discovery</Title>
+        <Paragraph style={styles.text}>
+          Scan for nearby Keiros devices and configure their WiFi settings.
+        </Paragraph>
+        
+        {isScanning ? (
+          <View style={localStyles.scanningContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.statusText}>
+              Scanning for Keiros devices...
+            </Text>
+            <Text style={styles.statusText}>
+              Found {deviceCount} device(s)
+            </Text>
+          </View>
+        ) : (
+          <Button
+            mode="contained"
+            onPress={startDeviceScan}
+            disabled={!bluetoothEnabled}
+            style={styles.gradientButton}
+            icon="bluetooth"
+            contentStyle={localStyles.buttonContent}
+          >
+            Start Device Scan
+          </Button>
+        )}
+      </Surface>
 
-      <Card style={styles.card}>
-        <Card.Content>
-          <Title style={styles.subtitle}>Quick Actions</Title>
+      {/* Quick Actions Card */}
+      <Surface style={styles.modernCard}>
+        <Title style={styles.subtitle}>Quick Actions</Title>
+        <View style={localStyles.actionButtons}>
           <Button
             mode="outlined"
             onPress={navigateToDeviceList}
-            style={styles.button}
+            style={[styles.button, { flex: 1, marginRight: 8 }]}
             icon="devices"
+            contentStyle={localStyles.buttonContent}
           >
-            View Scanned Devices
+            View Devices
           </Button>
-        </Card.Content>
-      </Card>
+          <Button
+            mode="outlined"
+            onPress={checkBluetoothStatus}
+            style={[styles.button, { flex: 1, marginLeft: 8 }]}
+            icon="refresh"
+            contentStyle={localStyles.buttonContent}
+          >
+            Refresh
+          </Button>
+        </View>
+      </Surface>
 
-      <Card style={styles.card}>
-        <Card.Content>
-          <Title style={styles.subtitle}>System Information</Title>
-          <Paragraph style={styles.text}>
-            • ESP32 Device Support: Enabled
-          </Paragraph>
-          <Paragraph style={styles.text}>
-            • WiFi Configuration: Available
-          </Paragraph>
-          <Paragraph style={styles.text}>
-            • Bluetooth Low Energy: Active
-          </Paragraph>
-          <Paragraph style={styles.text}>
-            • Real-time Scanning: Supported
-          </Paragraph>
-        </Card.Content>
-      </Card>
+      {/* System Information Card */}
+      <Surface style={styles.modernCard}>
+        <Title style={styles.subtitle}>System Information</Title>
+        <View style={localStyles.infoGrid}>
+          <View style={localStyles.infoItem}>
+            <MaterialCommunityIcons name="chip" size={24} color="#27ae60" />
+            <Text style={styles.text}>Keiros Device Support</Text>
+          </View>
+          <View style={localStyles.infoItem}>
+            <MaterialCommunityIcons name="wifi" size={24} color="#3498db" />
+            <Text style={styles.text}>WiFi Configuration</Text>
+          </View>
+          <View style={localStyles.infoItem}>
+            <MaterialCommunityIcons name="bluetooth" size={24} color="#9b59b6" />
+            <Text style={styles.text}>Bluetooth Low Energy</Text>
+          </View>
+          <View style={localStyles.infoItem}>
+            <MaterialCommunityIcons name="radar" size={24} color="#e67e22" />
+            <Text style={styles.text}>Real-time Scanning</Text>
+          </View>
+        </View>
+      </Surface>
     </ScrollView>
   );
 };
 
 const localStyles = StyleSheet.create({
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerContent: {
+    flex: 1,
+  },
   statusContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 8,
+  },
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusChip: {
+    backgroundColor: '#ecf0f1',
   },
   scanningContainer: {
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 20,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    marginTop: 8,
+  },
+  buttonContent: {
+    paddingVertical: 8,
+  },
+  infoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  infoItem: {
+    width: width * 0.4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
   },
 });
 
