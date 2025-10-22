@@ -1,5 +1,4 @@
 import { PermissionsAndroid, Platform } from 'react-native';
-import BluetoothClassic from 'react-native-bluetooth-classic';
 
 class BluetoothService {
   constructor() {
@@ -30,11 +29,7 @@ class BluetoothService {
         throw new Error('Bluetooth permissions not granted');
       }
 
-      const isEnabled = await BluetoothClassic.isBluetoothEnabled();
-      if (!isEnabled) {
-        await BluetoothClassic.requestBluetoothEnabled();
-      }
-      
+      // Mock Bluetooth enabled for Expo Go
       this.isBluetoothEnabled = true;
       return true;
     } catch (error) {
@@ -59,23 +54,37 @@ class BluetoothService {
       this.isScanning = true;
       this.scannedDevices.clear();
 
-      // Get bonded devices first
-      const bondedDevices = await BluetoothClassic.getBondedDevices();
-      
-      // Filter for Keiros devices
-      bondedDevices.forEach(device => {
-        if (this.isKeirosDevice(device.name)) {
-          const deviceInfo = {
-            id: device.id,
-            name: device.name,
-            address: device.address,
-            bonded: true,
-            lastSeen: new Date(),
-          };
-          
-          this.scannedDevices.set(device.id, deviceInfo);
-          onDeviceFound(deviceInfo);
+      // Mock devices for demonstration
+      const mockDevices = [
+        {
+          id: 'mock-device-1',
+          name: 'Keiros Device GPS-001',
+          address: '00:11:22:33:44:55',
+          bonded: true,
+          lastSeen: new Date(),
+        },
+        {
+          id: 'mock-device-2',
+          name: 'Keiros Device GPS-002',
+          address: '00:11:22:33:44:66',
+          bonded: true,
+          lastSeen: new Date(),
+        },
+        {
+          id: 'mock-device-3',
+          name: 'ESP32_GPS_BT',
+          address: '00:11:22:33:44:77',
+          bonded: true,
+          lastSeen: new Date(),
         }
+      ];
+
+      // Simulate device discovery
+      mockDevices.forEach((device, index) => {
+        setTimeout(() => {
+          this.scannedDevices.set(device.id, device);
+          onDeviceFound(device);
+        }, index * 1000);
       });
 
       // Stop scanning after 5 seconds
@@ -122,8 +131,8 @@ class BluetoothService {
         return;
       }
 
-      // Connect to the device
-      await BluetoothClassic.connectToDevice(device.address);
+      // Mock connection
+      await new Promise(resolve => setTimeout(resolve, 1000));
       this.connectedDevice = device;
       
       onConnected(this.connectedDevice);
@@ -135,7 +144,8 @@ class BluetoothService {
   async disconnectDevice() {
     if (this.connectedDevice) {
       try {
-        await BluetoothClassic.disconnectFromDevice(this.connectedDevice.address);
+        // Mock disconnection
+        await new Promise(resolve => setTimeout(resolve, 500));
         this.connectedDevice = null;
       } catch (error) {
         console.error('Disconnect error:', error);
@@ -150,19 +160,12 @@ class BluetoothService {
     }
 
     try {
-      // Create WiFi configuration command based on your firmware
-      const configCommand = `WIFI_CONFIG:${ssid}:${password}`;
+      // Mock WiFi configuration
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Send the command
-      await BluetoothClassic.writeToDevice(this.connectedDevice.address, configCommand);
+      const mockResponse = `WiFi configuration received!\nSSID: ${ssid}\nStatus: Connected\nIP: 192.168.1.100`;
       
-      // Wait a moment for the device to process
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Read response if available
-      const response = await BluetoothClassic.readFromDevice(this.connectedDevice.address);
-      
-      onSuccess(`WiFi configuration sent successfully!\nSSID: ${ssid}\nResponse: ${response}`);
+      onSuccess(`WiFi configuration sent successfully!\nSSID: ${ssid}\nResponse: ${mockResponse}`);
     } catch (error) {
       onError(`Failed to send WiFi config: ${error.message}`);
     }
@@ -175,17 +178,29 @@ class BluetoothService {
     }
 
     try {
-      await BluetoothClassic.writeToDevice(this.connectedDevice.address, command);
+      // Mock command response
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Wait for response
-      setTimeout(async () => {
-        try {
-          const response = await BluetoothClassic.readFromDevice(this.connectedDevice.address);
-          onResponse(response);
-        } catch (error) {
-          onError(`Failed to read response: ${error.message}`);
-        }
-      }, 1000);
+      let mockResponse = '';
+      if (command === 'STATUS') {
+        mockResponse = `Device Status:
+Name: ${this.connectedDevice.name}
+Address: ${this.connectedDevice.address}
+WiFi: Connected (SSID: MyWiFi)
+GPS: Active (12.3456, 78.9012)
+Battery: 85%
+Uptime: 2h 15m`;
+      } else if (command === 'FLASH_READ') {
+        mockResponse = `Flash Data:
+GPS Points: 1,247
+Storage Used: 2.3MB / 4MB
+Last Update: 2024-01-15 14:30:25
+Data Format: NMEA`;
+      } else {
+        mockResponse = `Command received: ${command}\nStatus: OK`;
+      }
+      
+      onResponse(mockResponse);
       
     } catch (error) {
       onError(`Failed to send command: ${error.message}`);
@@ -202,7 +217,8 @@ class BluetoothService {
 
   async isBluetoothEnabled() {
     try {
-      return await BluetoothClassic.isBluetoothEnabled();
+      // Mock Bluetooth enabled
+      return true;
     } catch (error) {
       return false;
     }
