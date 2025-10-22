@@ -23,6 +23,7 @@
       }
     },
     "android": {
+      "package": "com.keiros.service",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
