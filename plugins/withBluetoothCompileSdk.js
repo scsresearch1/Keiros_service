@@ -45,6 +45,37 @@ const withBluetoothCompileSdk = (config) => {
       }
     }
     
+    // CRITICAL: Configure compileSdk BEFORE React Native plugin evaluates subprojects
+    // This must be in allprojects block BEFORE apply plugin line
+    const allprojectsBlock = `// CRITICAL: Configure compileSdk BEFORE React Native plugin evaluates subprojects
+// This must happen BEFORE apply plugin line below
+allprojects { project ->
+    // Set compileSdk for ALL projects (including root) before any evaluation
+    project.ext.compileSdkVersion = 34
+    
+    // Configure compileSdk synchronously for any project that already has Android plugin
+    if (project.plugins.hasPlugin('com.android.application') || 
+        project.plugins.hasPlugin('com.android.library')) {
+        project.android {
+            compileSdkVersion 34
+        }
+    }
+    
+    // Register for future plugin applications (plugins {} block)
+    project.plugins.withId('com.android.application') { plugin ->
+        project.android {
+            compileSdkVersion 34
+        }
+    }
+    project.plugins.withId('com.android.library') { plugin ->
+        project.android {
+            compileSdkVersion 34
+        }
+    }
+}
+
+`;
+
     // Define the subprojects block - COMPREHENSIVE Gradle 8.8 compatible solution
     // This ensures ALL subprojects (including react-native-bluetooth-serial-next) 
     // use compileSdkVersion 34, which satisfies the >= 30 requirement
@@ -86,12 +117,21 @@ const withBluetoothCompileSdk = (config) => {
 }`;
     
     // Check if our specific configuration already exists (avoid duplicates)
-    // Look for our exact pattern - must have subprojects block with beforeEvaluate and compileSdkVersion 34
-    const hasOurConfig = /subprojects\s*\{[^}]*beforeEvaluate[^}]*compileSdkVersion\s*34/.test(buildGradle);
+    // Look for allprojects block BEFORE apply plugin with compileSdk configuration
+    const hasAllprojectsConfig = /allprojects\s*\{[^}]*compileSdkVersion\s*34/.test(buildGradle) && 
+                                   /\/\/ CRITICAL: Configure compileSdk BEFORE React Native/.test(buildGradle);
     
-    if (hasOurConfig) {
-      // Already configured correctly, skip to avoid duplicates
-      return config;
+    // Insert allprojects block BEFORE apply plugin line
+    const applyPluginMatch = buildGradle.match(/apply\s+plugin:\s*["']com\.facebook\.react\.rootproject["']/);
+    
+    if (applyPluginMatch && !hasAllprojectsConfig) {
+      // Insert allprojects block right before apply plugin line
+      const insertIndex = applyPluginMatch.index;
+      const before = buildGradle.substring(0, insertIndex).trim();
+      const after = buildGradle.substring(insertIndex).trim();
+      buildGradle = before + '\n\n' + allprojectsBlock + after;
+    } else if (hasAllprojectsConfig) {
+      // Already configured, skip
     }
     
     // Check if any subprojects block exists
