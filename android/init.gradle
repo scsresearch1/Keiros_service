@@ -1,35 +1,36 @@
 // Gradle init script - runs BEFORE any project evaluation
 // This ensures compileSdkVersion is set for ALL projects before they're evaluated
 
-allprojects { project ->
-    // Set compileSdkVersion for ALL projects (root + subprojects) before evaluation
-    project.ext.compileSdkVersion = 34
-}
-
-subprojects { subproject ->
-    // Configure compileSdk for subprojects BEFORE they're evaluated
-    subproject.beforeEvaluate { project ->
-        // Set compileSdk directly in android block if extension exists
-        try {
-            if (project.extensions.findByName('android')) {
-                project.extensions.configure('android') { android ->
-                    android.compileSdkVersion 34
+// Use gradle.projectsLoaded hook to configure projects before they're evaluated
+gradle.projectsLoaded { ->
+    // Set compileSdkVersion for ALL projects (root + subprojects)
+    gradle.rootProject.allprojects { project ->
+        project.ext.compileSdkVersion = 34
+        
+        // Configure compileSdk BEFORE project evaluation
+        project.beforeEvaluate { proj ->
+            // Set compileSdk directly if Android extension exists
+            try {
+                if (proj.extensions.findByName('android')) {
+                    proj.extensions.configure('android') { android ->
+                        android.compileSdkVersion 34
+                    }
                 }
+            } catch (Exception e) {
+                // Extension doesn't exist yet
             }
-        } catch (Exception e) {
-            // Extension doesn't exist yet
         }
-    }
-    
-    // Register for Android plugins applied via plugins {} block
-    subproject.plugins.withId('com.android.application') { plugin ->
-        subproject.android {
-            compileSdkVersion 34
+        
+        // Register for Android plugins applied via plugins {} block
+        project.plugins.withId('com.android.application') { plugin ->
+            project.android {
+                compileSdkVersion 34
+            }
         }
-    }
-    subproject.plugins.withId('com.android.library') { plugin ->
-        subproject.android {
-            compileSdkVersion 34
+        project.plugins.withId('com.android.library') { plugin ->
+            project.android {
+                compileSdkVersion 34
+            }
         }
     }
 }
