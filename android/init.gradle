@@ -1,36 +1,20 @@
 // Gradle init script - runs BEFORE any project evaluation
 // This ensures compileSdkVersion is set for ALL projects before they're evaluated
 
-// Use gradle.projectsLoaded hook to configure projects before they're evaluated
-gradle.projectsLoaded { ->
-    // Set compileSdkVersion for ALL projects (root + subprojects)
-    gradle.rootProject.allprojects { project ->
-        project.ext.compileSdkVersion = 34
-        
-        // Configure compileSdk BEFORE project evaluation
-        project.beforeEvaluate { proj ->
-            // Set compileSdk directly if Android extension exists
-            try {
-                if (proj.extensions.findByName('android')) {
-                    proj.extensions.configure('android') { android ->
-                        android.compileSdkVersion 34
-                    }
-                }
-            } catch (Exception e) {
-                // Extension doesn't exist yet
-            }
+// Use beforeProject hook - runs for EACH project BEFORE it's evaluated
+gradle.beforeProject { project ->
+    // Set ext property for all projects
+    project.ext.compileSdkVersion = 34
+    
+    // Register for Android plugins - this runs when plugin is applied (before evaluation)
+    project.plugins.withId('com.android.application') { plugin ->
+        project.android {
+            compileSdkVersion 34
         }
-        
-        // Register for Android plugins applied via plugins {} block
-        project.plugins.withId('com.android.application') { plugin ->
-            project.android {
-                compileSdkVersion 34
-            }
-        }
-        project.plugins.withId('com.android.library') { plugin ->
-            project.android {
-                compileSdkVersion 34
-            }
+    }
+    project.plugins.withId('com.android.library') { plugin ->
+        project.android {
+            compileSdkVersion 34
         }
     }
 }
