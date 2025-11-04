@@ -2,12 +2,14 @@
 
 buildscript {
     ext {
+        // Read from gradle.properties (strings) → coerce to Integer
+        // These MUST be defined before the React Native root plugin applies
+        minSdkVersion = (project.findProperty("android.minSdkVersion") ?: "24") as Integer
+        compileSdkVersion = (project.findProperty("android.compileSdkVersion") ?: "34") as Integer
+        targetSdkVersion = (project.findProperty("android.targetSdkVersion") ?: "34") as Integer
+        kotlinVersion = project.findProperty("android.kotlinVersion") ?: "1.9.24"
+        
         buildToolsVersion = findProperty('android.buildToolsVersion') ?: '34.0.0'
-        minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '23')
-        compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '34')
-        targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '34')
-        kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.23'
-
         ndkVersion = "26.1.10909125"
     }
     repositories {
@@ -15,16 +17,10 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath('com.android.tools.build:gradle')
+        classpath("com.android.tools.build:gradle:8.5.2")
         classpath('com.facebook.react:react-native-gradle-plugin')
-        classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     }
-}
-
-// SIMPLEST SOLUTION: Set ext property for all projects
-// This is read by subprojects via rootProject.ext.compileSdkVersion
-allprojects { project ->
-    project.ext.compileSdkVersion = 34
 }
 
 apply plugin: "com.facebook.react.rootproject"
@@ -43,51 +39,5 @@ allprojects {
         google()
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
-    }
-}
-
-// SIMPLEST SOLUTION: Force compileSdk for ALL subprojects
-// Only use afterEvaluate if project is NOT already evaluated
-subprojects { subproject ->
-    // Skip root project - it's not a subproject
-    if (subproject == rootProject) {
-        return
-    }
-    
-    // Check if project is already evaluated - can't use afterEvaluate if it is
-    try {
-        if (subproject.state.executed) {
-            // Already evaluated - try to set directly using variant API
-            if (subproject.plugins.hasPlugin('com.android.application') || 
-                subproject.plugins.hasPlugin('com.android.library')) {
-                try {
-                    subproject.androidComponents {
-                        finalizeDsl { ext ->
-                            ext.android.compileSdkVersion = 34
-                        }
-                    }
-                } catch (Exception e) {
-                    // Variant API not available or too late
-                }
-            }
-        } else {
-            // Not evaluated yet - register afterEvaluate callback
-            subproject.afterEvaluate { project ->
-                try {
-                    if (project.plugins.hasPlugin('com.android.application') || 
-                        project.plugins.hasPlugin('com.android.library')) {
-                        project.androidComponents {
-                            finalizeDsl { ext ->
-                                ext.android.compileSdkVersion = 34
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    // Variant API not available
-                }
-            }
-        }
-    } catch (Exception e) {
-        // Ignore errors - project might not be set up yet
     }
 }

@@ -46,15 +46,6 @@ if (getRNMinorVersion() >= 75) {
 
 rootProject.name = 'Keiros Service App'
 
-// SIMPLEST SOLUTION: Set compileSdk for ALL projects BEFORE evaluation
-// This runs in settings.gradle which is evaluated BEFORE any build.gradle files
-gradle.projectsLoaded { ->
-    gradle.rootProject.allprojects { project ->
-        // Set ext property - this is available immediately for all projects
-        project.ext.compileSdkVersion = 34
-    }
-}
-
 dependencyResolutionManagement {
   versionCatalogs {
     reactAndroidLibs {

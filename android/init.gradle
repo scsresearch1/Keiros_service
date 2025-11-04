@@ -1,8 +1,0 @@
-// SIMPLEST SOLUTION: Set compileSdk as default property BEFORE evaluation
-// Init script runs before ANY project evaluation
-
-gradle.beforeProject { project ->
-    // Set ext property immediately - available before build.gradle is evaluated
-    project.ext.compileSdkVersion = 34
-}
-
