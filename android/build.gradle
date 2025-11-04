@@ -47,28 +47,44 @@ allprojects {
 }
 
 // SIMPLEST SOLUTION: Force compileSdk for ALL subprojects
-// Use afterEvaluate to set it - this is the ONLY way for subprojects we can't modify
+// Only use afterEvaluate if project is NOT already evaluated
 subprojects { subproject ->
-    subproject.afterEvaluate { project ->
-        // Force compileSdk even if it was already read
-        // Use variant API to set it post-evaluation
+    // Check if project is already evaluated
+    if (!subproject.state.executed) {
+        // Project not evaluated yet - use afterEvaluate
+        subproject.afterEvaluate { project ->
+            try {
+                if (project.plugins.hasPlugin('com.android.application') || 
+                    project.plugins.hasPlugin('com.android.library')) {
+                    // Use androidComponents API - this works even after evaluation
+                    project.androidComponents {
+                        finalizeDsl { ext ->
+                            ext.android.compileSdkVersion = 34
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Fallback: try direct assignment
+                try {
+                    project.android.compileSdkVersion = 34
+                } catch (Exception e2) {
+                    // If both fail, subproject didn't use Android plugin
+                }
+            }
+        }
+    } else {
+        // Project already evaluated - try to set it directly
         try {
-            if (project.plugins.hasPlugin('com.android.application') || 
-                project.plugins.hasPlugin('com.android.library')) {
-                // Use androidComponents API - this works even after evaluation
-                project.androidComponents {
+            if (subproject.plugins.hasPlugin('com.android.application') || 
+                subproject.plugins.hasPlugin('com.android.library')) {
+                subproject.androidComponents {
                     finalizeDsl { ext ->
                         ext.android.compileSdkVersion = 34
                     }
                 }
             }
         } catch (Exception e) {
-            // Fallback: try direct assignment
-            try {
-                project.android.compileSdkVersion = 34
-            } catch (Exception e2) {
-                // If both fail, subproject didn't use Android plugin
-            }
+            // Already too late or no Android plugin
         }
     }
 }
