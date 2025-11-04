@@ -49,42 +49,45 @@ allprojects {
 // SIMPLEST SOLUTION: Force compileSdk for ALL subprojects
 // Only use afterEvaluate if project is NOT already evaluated
 subprojects { subproject ->
-    // Check if project is already evaluated
-    if (!subproject.state.executed) {
-        // Project not evaluated yet - use afterEvaluate
-        subproject.afterEvaluate { project ->
-            try {
-                if (project.plugins.hasPlugin('com.android.application') || 
-                    project.plugins.hasPlugin('com.android.library')) {
-                    // Use androidComponents API - this works even after evaluation
-                    project.androidComponents {
+    // Skip root project - it's not a subproject
+    if (subproject == rootProject) {
+        return
+    }
+    
+    // Check if project is already evaluated - can't use afterEvaluate if it is
+    try {
+        if (subproject.state.executed) {
+            // Already evaluated - try to set directly using variant API
+            if (subproject.plugins.hasPlugin('com.android.application') || 
+                subproject.plugins.hasPlugin('com.android.library')) {
+                try {
+                    subproject.androidComponents {
                         finalizeDsl { ext ->
                             ext.android.compileSdkVersion = 34
                         }
                     }
+                } catch (Exception e) {
+                    // Variant API not available or too late
                 }
-            } catch (Exception e) {
-                // Fallback: try direct assignment
+            }
+        } else {
+            // Not evaluated yet - register afterEvaluate callback
+            subproject.afterEvaluate { project ->
                 try {
-                    project.android.compileSdkVersion = 34
-                } catch (Exception e2) {
-                    // If both fail, subproject didn't use Android plugin
-                }
-            }
-        }
-    } else {
-        // Project already evaluated - try to set it directly
-        try {
-            if (subproject.plugins.hasPlugin('com.android.application') || 
-                subproject.plugins.hasPlugin('com.android.library')) {
-                subproject.androidComponents {
-                    finalizeDsl { ext ->
-                        ext.android.compileSdkVersion = 34
+                    if (project.plugins.hasPlugin('com.android.application') || 
+                        project.plugins.hasPlugin('com.android.library')) {
+                        project.androidComponents {
+                            finalizeDsl { ext ->
+                                ext.android.compileSdkVersion = 34
+                            }
+                        }
                     }
+                } catch (Exception e) {
+                    // Variant API not available
                 }
             }
-        } catch (Exception e) {
-            // Already too late or no Android plugin
         }
+    } catch (Exception e) {
+        // Ignore errors - project might not be set up yet
     }
 }
