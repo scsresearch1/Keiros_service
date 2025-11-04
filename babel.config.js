@@ -2,8 +2,6 @@ module.exports = function(api) {
   api.cache(true);
   return {
     presets: ['babel-preset-expo'],
-    plugins: [
-      'expo-router/babel',
-    ],
+    // expo-router is handled automatically by babel-preset-expo in SDK 50+
   };
 };
