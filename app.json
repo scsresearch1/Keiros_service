@@ -14,7 +14,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.keiros.serviceapp"
+      "bundleIdentifier": "com.keiros.serviceapp",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -27,8 +30,15 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.BLUETOOTH_CONNECT",
         "android.permission.BLUETOOTH_SCAN"
-      ]
+      ],
+      "runtimeVersion": "1.0.0"
     },
     "web": {},
     "plugins": [
@@ -43,7 +53,8 @@
             "minSdkVersion": 21
           }
         }
-      ]
+      ],
+      "./plugins/withBluetoothCompileSdk.js"
     ],
     "scheme": "keiros-service-app",
     "extra": {
@@ -53,6 +64,9 @@
       "router": {
         "origin": false
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8657b0f9-0d7a-43d7-a32b-c34a8e262aef"
     }
   }
 }
