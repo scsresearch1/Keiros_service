@@ -1,21 +1,8 @@
-// Gradle init script - runs BEFORE any project evaluation
-// This ensures compileSdkVersion is set for ALL projects before they're evaluated
+// SIMPLEST SOLUTION: Set compileSdk as default property BEFORE evaluation
+// Init script runs before ANY project evaluation
 
-// Use beforeProject hook - runs for EACH project BEFORE it's evaluated
 gradle.beforeProject { project ->
-    // Set ext property for all projects
+    // Set ext property immediately - available before build.gradle is evaluated
     project.ext.compileSdkVersion = 34
-    
-    // Register for Android plugins - this runs when plugin is applied (before evaluation)
-    project.plugins.withId('com.android.application') { plugin ->
-        project.android {
-            compileSdkVersion 34
-        }
-    }
-    project.plugins.withId('com.android.library') { plugin ->
-        project.android {
-            compileSdkVersion 34
-        }
-    }
 }
 

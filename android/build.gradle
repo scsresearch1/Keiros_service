@@ -21,31 +21,10 @@ buildscript {
     }
 }
 
-// CRITICAL: Configure compileSdk BEFORE React Native plugin evaluates subprojects
-// This must happen BEFORE apply plugin line below
+// SIMPLEST SOLUTION: Set ext property for all projects
+// This is read by subprojects via rootProject.ext.compileSdkVersion
 allprojects { project ->
-    // Set compileSdk for ALL projects (including root) before any evaluation
     project.ext.compileSdkVersion = 34
-    
-    // Configure compileSdk synchronously for any project that already has Android plugin
-    if (project.plugins.hasPlugin('com.android.application') || 
-        project.plugins.hasPlugin('com.android.library')) {
-        project.android {
-            compileSdkVersion 34
-        }
-    }
-    
-    // Register for future plugin applications (plugins {} block)
-    project.plugins.withId('com.android.application') { plugin ->
-        project.android {
-            compileSdkVersion 34
-        }
-    }
-    project.plugins.withId('com.android.library') { plugin ->
-        project.android {
-            compileSdkVersion 34
-        }
-    }
 }
 
 apply plugin: "com.facebook.react.rootproject"
@@ -67,38 +46,6 @@ allprojects {
     }
 }
 
-subprojects { subproject ->
-    // COMPREHENSIVE compileSdkVersion configuration for Gradle 8.8
-    // MUST set compileSdk BEFORE evaluation - afterEvaluate is too late!
-    
-    // Method 1: Set ext property for subprojects to reference
-    subproject.ext.compileSdkVersion = 34
-    
-    // Method 2: beforeEvaluate - PRIMARY method (executes before evaluation)
-    // Configure android extension directly - this is safe in beforeEvaluate
-    subproject.beforeEvaluate { project ->
-        // Configure extension if it exists (for plugins already applied)
-        try {
-            if (project.extensions.findByName('android')) {
-                project.extensions.configure('android') { android ->
-                    android.compileSdkVersion 34
-                }
-            }
-        } catch (Exception e) {
-            // Extension doesn't exist yet - that's fine
-        }
-    }
-    
-    // Method 3: plugins.withId - handles plugins applied via plugins {} block
-    // This executes synchronously when plugin is registered (before evaluation)
-    subproject.plugins.withId('com.android.application') { plugin ->
-        subproject.android {
-            compileSdkVersion 34
-        }
-    }
-    subproject.plugins.withId('com.android.library') { plugin ->
-        subproject.android {
-            compileSdkVersion 34
-        }
-    }
-}
+// SIMPLEST SOLUTION: Ensure subprojects reference rootProject.ext.compileSdkVersion
+// Subprojects should use: compileSdk rootProject.ext.compileSdkVersion
+// This is already set in allprojects block above
