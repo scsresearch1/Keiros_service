@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # OSX
 .DS_Store
 
@@ -35,6 +36,13 @@ local.properties
 node_modules/
 npm-debug.log
 yarn-error.log
+=======
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+>>>>>>> e4c801c77fbe6f9b979e153814e61b56ddfef4c4
 
 # Expo
 .expo/
@@ -57,6 +65,7 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
+<<<<<<< HEAD
 # Macros
 .env.local
 .env.development.local
@@ -65,3 +74,21 @@ yarn-error.*
 
 # TypeScript
 *.tsbuildinfo
+=======
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+>>>>>>> e4c801c77fbe6f9b979e153814e61b56ddfef4c4
