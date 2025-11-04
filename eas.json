@@ -8,7 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-        "gradleCommand": ":app:assembleDebug --init-script android/init.gradle",
+        "gradleCommand": ":app:assembleDebug --init-script init.gradle",
         "buildType": "apk"
       }
     },
@@ -16,14 +16,14 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease --init-script android/init.gradle"
+        "gradleCommand": ":app:assembleRelease --init-script init.gradle"
       },
       "autoIncrement": true
     },
     "production": {
       "android": {
         "buildType": "app-bundle",
-        "gradleCommand": ":app:bundleRelease --init-script android/init.gradle"
+        "gradleCommand": ":app:bundleRelease --init-script init.gradle"
       }
     }
   },
