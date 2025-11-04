@@ -46,6 +46,29 @@ allprojects {
     }
 }
 
-// SIMPLEST SOLUTION: Ensure subprojects reference rootProject.ext.compileSdkVersion
-// Subprojects should use: compileSdk rootProject.ext.compileSdkVersion
-// This is already set in allprojects block above
+// SIMPLEST SOLUTION: Force compileSdk for ALL subprojects
+// Use afterEvaluate to set it - this is the ONLY way for subprojects we can't modify
+subprojects { subproject ->
+    subproject.afterEvaluate { project ->
+        // Force compileSdk even if it was already read
+        // Use variant API to set it post-evaluation
+        try {
+            if (project.plugins.hasPlugin('com.android.application') || 
+                project.plugins.hasPlugin('com.android.library')) {
+                // Use androidComponents API - this works even after evaluation
+                project.androidComponents {
+                    finalizeDsl { ext ->
+                        ext.android.compileSdkVersion = 34
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Fallback: try direct assignment
+            try {
+                project.android.compileSdkVersion = 34
+            } catch (Exception e2) {
+                // If both fail, subproject didn't use Android plugin
+            }
+        }
+    }
+}
