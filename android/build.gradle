@@ -48,25 +48,9 @@ subprojects { subproject ->
     subproject.ext.compileSdkVersion = 34
     
     // Method 2: beforeEvaluate - PRIMARY method (executes before evaluation)
-    // This is the ONLY safe way to set compileSdk in Gradle 8.8
+    // Configure android extension directly - this is safe in beforeEvaluate
     subproject.beforeEvaluate { project ->
-        // Register callback to configure android extension when plugin is applied
-        // This works for plugins applied via 'apply plugin:' syntax
-        project.plugins.whenPluginAdded { plugin ->
-            if (plugin.class.name.contains('android.build.gradle') || 
-                project.plugins.hasPlugin('com.android.application') ||
-                project.plugins.hasPlugin('com.android.library')) {
-                try {
-                    project.android {
-                        compileSdkVersion 34
-                    }
-                } catch (Exception e) {
-                    // Ignore if already set or too late
-                }
-            }
-        }
-        
-        // Also try direct configuration if extension already exists
+        // Configure extension if it exists (for plugins already applied)
         try {
             if (project.extensions.findByName('android')) {
                 project.extensions.configure('android') { android ->
@@ -74,12 +58,12 @@ subprojects { subproject ->
                 }
             }
         } catch (Exception e) {
-            // Extension doesn't exist yet - that's fine, whenPluginAdded will handle it
+            // Extension doesn't exist yet - that's fine
         }
     }
     
     // Method 3: plugins.withId - handles plugins applied via plugins {} block
-    // This executes when plugin is applied (before evaluation)
+    // This executes synchronously when plugin is registered (before evaluation)
     subproject.plugins.withId('com.android.application') { plugin ->
         subproject.android {
             compileSdkVersion 34
